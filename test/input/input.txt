@@ -1,0 +1,55 @@
+int solve(int a, int b) {
+    return a + b;
+}
+
+void emptyFunction() {
+}
+
+int main() {
+    int x = 1;
+    float f = 0.2;
+    char a[10];
+    char b = 'b';
+    int ci = 10;
+	char str[256];
+	str = "Hello World";
+
+    x++;
+    ++x;
+    
+    if (x > y) {
+        x = y;
+    } else if (x < y) {
+        x = y + 1;
+    } else {
+        x = 0;
+    }
+
+    while (x > 0) {
+        x--;
+    }
+
+    for (i = 0; i < 10; i++) {
+        x = x + i;
+    }
+
+    for (i = 0; i < 10; i++) {
+        a[i] = i;
+    }
+
+    x = !x;
+    x = x % 5;
+    x = x & 1;
+    x = x | 1;
+    x = x ^ 1;
+    x = ~x;
+
+    int result = solve(x, y);
+
+	{
+		int nestedVar = 5;
+		nestedVar = nestedVar + 2;
+	}
+
+    return 0;
+}
