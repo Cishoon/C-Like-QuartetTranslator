@@ -22,7 +22,7 @@
                     "ignoreFailures": true
                 }
             ],
-            // "preLaunchTask": "build my project",
+            "preLaunchTask": "build my project",
             "miDebuggerPath": "gdb" // 确保这个路径指向您系统中的 GDB
         }
     ]

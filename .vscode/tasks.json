@@ -6,8 +6,8 @@
             "type": "shell",
             "command": "g++",
             "args": [
+                "-g",
                 "-std=c++17",
-                "-O2",
                 "${workspaceFolder}\\src\\main.cpp",
                 "${workspaceFolder}\\src\\Lexer.cpp",
                 "${workspaceFolder}\\src\\LR1Parser.cpp",
