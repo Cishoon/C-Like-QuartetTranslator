@@ -22,8 +22,8 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	createLogFileIfNotExists("./output/test.log");
-	freopen("./output/test.log", "w", stdout);
+	// createLogFileIfNotExists("./output/test.log");
+	// freopen("./output/test.log", "w", stdout);
 
 	std::string inputFile = argv[1];
 	std::string grammarFile = argv[2];
@@ -42,27 +42,21 @@ int main(int argc, char* argv[])
 
 	Lexer lexer(content);
 	std::vector<Symbol> sentence;
+
 	Token token;
-	std::cout << "--------------------词法分析--------------------" << std::endl;
 	do {
 		token = lexer.getNextToken();
-		std::cout << token.toString() << std::endl;
-		sentence.push_back(Symbol(SymbolType::Terminal, token.toString()));
+		// std::cout << token.type_to_string() << std::endl;
+		sentence.push_back(Symbol(SymbolType::Terminal, token.type_to_string()));
 	} while (token.type != T_EOF);
-	std::cout << "--------------------词法分析--------------------" << std::endl;
 
-	LR1Parser parser(grammarFile);
-	std::cout << "--------------------FIRST集--------------------" << std::endl;
-	parser.print_firstSet();
-	std::cout << "--------------------FIRST集--------------------" << std::endl;
-	
-	std::cout << "---------------ACTION表和GOTO表-----------------" << std::endl;
-	parser.print_tables();
-	std::cout << "---------------ACTION表和GOTO表-----------------" << std::endl;
-	
-	std::cout << "--------------------语法分析--------------------" << std::endl;
-	parser.parse(sentence);
-	std::cout << "--------------------语法分析--------------------" << std::endl;
+	// LR1Parser parser(grammarFile);
+	// parser.save_tables("./test/grammer/table.cache");
+	LR1Parser parser;
+	parser.load_tables("./test/grammer/table.cache");
+
+	ParserTreeNode* root = nullptr;
+	parser.parse(sentence, root);
 
 
 	return 0;

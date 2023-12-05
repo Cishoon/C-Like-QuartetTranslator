@@ -74,17 +74,16 @@ struct Token
 	Token(const TokenType& type, const std::string& value) : type(type), value(value) {}
 	Token() {}
 
-	TokenType type;
-	std::string value;
+	TokenType type;     // 属于哪个终结符
+	std::string value;  // 终结符的具体值
 
-	std::string toString()
+	std::string type_to_string() const
 	{
-		// return "Type: \t" + tokenTypeToString(type) + ", \tValue: \t" + value;
 		return tokenTypeToString(type);
-	};
+	}
 
 private:
-	std::string tokenTypeToString(TokenType type)
+	std::string tokenTypeToString(const TokenType& type) const
 	{
 		switch (type) {
 			case T_IDENTIFIER:

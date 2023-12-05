@@ -10,6 +10,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <iostream>
 
 
 enum class SymbolType {
@@ -18,32 +19,65 @@ enum class SymbolType {
 	Epsilon       // 空串
 };
 
+
+
 struct Symbol
 {
-	SymbolType type;
-	std::string value;
+	SymbolType type;         // 终结符/非终结符/空串
+	std::string literal;     // 这个符号的字面量，比如一个非终结符名为 S,A,B e.g.一个终结符名为T_INT,T_xxxx
+	std::string real_value;  // 这个符号的真实值，比如一个变量名a，一个int数值3
+
 	Symbol()
 	{
 		type = SymbolType::Epsilon;
-		value = "";
+		literal = "";
+		real_value = "";
 	}
-	Symbol(const SymbolType& type, const std::string& value) : type(type), value(value) {}
+	Symbol(const SymbolType& type, const std::string& literal) : type(type), literal(literal), real_value("") {}
 
 	std::string to_string() const
 	{
-		return value;  // 或者任何合适的表示方式
+		return literal;  // 或者任何合适的表示方式
 	}
+
+
 
 	friend bool operator==(const Symbol& lhs, const Symbol& rhs)
 	{
-		return lhs.type == rhs.type && lhs.value == rhs.value;
+		return lhs.type == rhs.type && lhs.literal == rhs.literal && lhs.real_value == rhs.real_value;
 	}
 
 	friend bool operator<(const Symbol& lhs, const Symbol& rhs)
 	{
-		if (lhs.type < rhs.type) return true;
-		if (rhs.type < lhs.type) return false;
-		return lhs.value < rhs.value;
+		if (lhs.type != rhs.type) {
+			return lhs.type < rhs.type;
+		}
+		if (lhs.literal != rhs.literal) {
+			return lhs.literal < rhs.literal;
+		}
+		return lhs.real_value < rhs.real_value;
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, Symbol& symbol)
+	{
+		if (symbol.type == SymbolType::Epsilon) {
+			return os << static_cast<int>(symbol.type);
+		}
+		return os << static_cast<int>(symbol.type) << " " << symbol.literal << " "
+		          << (symbol.real_value.empty() ? "NULL" : symbol.real_value);
+	}
+	friend std::istream& operator>>(std::istream& is, Symbol& symbol)
+	{
+		int temp;
+		is >> temp;
+		symbol.type = static_cast<SymbolType>(temp);
+		if (symbol.type == SymbolType::Epsilon) {
+			return is;
+		}
+
+		is >> symbol.literal >> symbol.real_value;
+		if (symbol.real_value == "NULL") symbol.real_value = "";
+		return is;
 	}
 };
 
@@ -57,9 +91,9 @@ struct Production
 	std::string to_string() const
 	{
 		std::string res;
-		res += lhs.value + " -> ";
+		res += lhs.literal + " -> ";
 		for (auto& item : rhs) {
-			res += item.value;
+			res += item.literal;
 		}
 		return "[" + res + "]";
 	}
@@ -73,6 +107,28 @@ struct Production
 		if (lhs.lhs < rhs.lhs) return true;
 		if (rhs.lhs < lhs.lhs) return false;
 		return lhs.rhs < rhs.rhs;
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, Production& production)
+	{
+		os << production.lhs << " " << production.rhs.size();
+		for (auto& symbol : production.rhs) {
+			os << " " << symbol;
+		}
+		return os;
+	}
+
+	friend std::istream& operator>>(std::istream& is, Production& production)
+	{
+		size_t size;
+		is >> production.lhs >> size;
+		production.rhs.clear();
+		Symbol symbol;
+		for (size_t i = 0; i < size; ++i) {
+			is >> symbol;
+			production.rhs.push_back(symbol);
+		}
+		return is;
 	}
 };
 
@@ -91,14 +147,14 @@ public:
 	std::string to_string() const
 	{
 		std::string res;
-		res += production.lhs.value + " -> ";
+		res += production.lhs.literal + " -> ";
 		size_t index = 0;
 		for (auto& item : production.rhs) {
 			if (index++ == dot_position) res += ".";
-			res += item.value;
+			res += item.literal;
 		}
 		if (index++ == dot_position) res += ".";
-		res += ", " + lookahead.value;
+		res += ", " + lookahead.literal;
 		return "[" + res + "]";
 	}
 
@@ -167,6 +223,34 @@ struct Action
 		}
 		return "";
 	}
+
+
+	friend std::ostream& operator<<(std::ostream& os, Action::Type& type)
+	{
+		return os << static_cast<int>(type);
+	}
+
+	friend std::istream& operator>>(std::istream& is, Action::Type& type)
+	{
+		int intType;
+		is >> intType;
+		type = static_cast<Type>(intType);
+		return is;
+	}
+
+
+	friend std::ostream& operator<<(std::ostream& os, Action& action)
+	{
+		return os << action.type << " " << action.number << " " << action.production;
+	}
+
+	friend std::istream& operator>>(std::istream& is, Action& action)
+	{
+		int temp;
+		is >> temp >> action.number >> action.production;
+		action.type = static_cast<Type>(temp);
+		return is;
+	}
 };
 
 
@@ -174,7 +258,11 @@ struct SymbolHash
 {
 	size_t operator()(const Symbol& sym) const
 	{
-		return std::hash<std::string>()(sym.value) ^ std::hash<int>()(static_cast<int>(sym.type));
+		size_t h1 = std::hash<std::string>()(sym.literal);
+		size_t h2 = std::hash<std::string>()(sym.real_value);
+		size_t h3 = std::hash<int>()(static_cast<int>(sym.type));
+
+		return ((h1 ^ (h2)) >> 1) ^ (h3 << 1);  // Combine and mix the hashes
 	}
 };
 
@@ -182,7 +270,9 @@ struct SymbolEqual
 {
 	bool operator()(const Symbol& lhs, const Symbol& rhs) const
 	{
-		return lhs.type == rhs.type && lhs.value == rhs.value;
+		return lhs.type == rhs.type &&
+		       lhs.literal == rhs.literal &&
+		       lhs.real_value == rhs.real_value;
 	}
 };
 
@@ -232,19 +322,34 @@ struct LR1ItemEqual
 	}
 };
 
+class ParserTreeNode : public Symbol {
+public:
+	ParserTreeNode(const Symbol& sym) : Symbol(sym)
+	{
+		children = std::vector<ParserTreeNode*>();
+	}
+	std::vector<ParserTreeNode*> children;
+
+	bool leaf() { return children.empty(); }
+};
+
 
 
 class LR1Parser {
 public:
 	LR1Parser(const std::vector<Production>& productions, Symbol start, Symbol end);
 	LR1Parser(const std::string file_path);
+	LR1Parser() {}
 
 	void print_firstSet() const;
 	void print_tables() const;
-	bool parse(const std::vector<Symbol>& sentence) const;
+	bool parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root) const;
+	void save_tables(const std::string& file_path);
+	void load_tables(const std::string& file_path);
 
 private:
-	void parse_EBNF_line(const std::string& line);
+	void
+	parse_EBNF_line(const std::string& line);
 	void print_stacks(const std::stack<int>& stateStack,
 	                  const std::stack<Symbol>& symbolStack,
 	                  const std::vector<Symbol>& inputStack) const;

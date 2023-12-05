@@ -235,9 +235,9 @@ std::vector<Production> LR1Parser::get_productions_start_by_symbol(const Symbol&
 void LR1Parser::print_firstSet() const
 {
 	for (const auto& [symbol, firstSetSymbols] : firstSet) {
-		std::cout << "FIRST(" << symbol.value << ") = { ";
+		std::cout << "FIRST(" << symbol.literal << ") = { ";
 		for (const auto& sym : firstSetSymbols) {
-			std::cout << sym.value << " ";
+			std::cout << sym.literal << " ";
 		}
 		std::cout << "}\n";
 	}
@@ -338,14 +338,17 @@ void LR1Parser::construct_tables()
 	}
 }
 
-bool LR1Parser::parse(const std::vector<Symbol>& sentence) const
+bool LR1Parser::parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root) const
 {
 	std::stack<int> stateStack;                                          // 状态栈
 	std::stack<Symbol> symbolStack;                                      // 符号栈
 	std::vector<Symbol> inputStack(sentence.rbegin(), sentence.rend());  // 输入栈
 
+	std::vector<ParserTreeNode*> nodeStack;  // 解析树结点栈
+
 	// 初始状态
 	stateStack.push(0);
+
 
 	while (!inputStack.empty()) {
 		int currentState = stateStack.top();
@@ -363,14 +366,27 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence) const
 					stateStack.push(action.number);
 					symbolStack.push(currentSymbol);
 					inputStack.pop_back();
+
+					// 创建一个新的叶子节点并压入节点栈
+					ParserTreeNode* newNode = new ParserTreeNode(currentSymbol);
+					nodeStack.push_back(newNode);
 					break;
 				}
 				case Action::Type::REDUCE: {
+					// 创建一个新的非叶子节点
+					ParserTreeNode* newNode = new ParserTreeNode(action.production.lhs);
+
 					// 根据产生式右侧的长度，从栈中弹出相应数量的符号和状态
 					for (size_t i = 0; i < action.production.rhs.size(); ++i) {
 						symbolStack.pop();
 						stateStack.pop();
+
+						newNode->children.insert(newNode->children.begin(), nodeStack.back());
+						nodeStack.pop_back();
 					}
+					// 将新节点压入节点栈
+					nodeStack.push_back(newNode);
+
 					// 将产生式左侧的非终结符压入符号栈
 					symbolStack.push(action.production.lhs);
 
@@ -381,6 +397,7 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence) const
 				}
 				case Action::Type::ACCEPT:
 					std::cout << "Accept\n";
+					root = nodeStack.back();  // 设置解析树的根
 					return true;
 				default:
 					std::cerr << "Parse error\n";
@@ -435,6 +452,72 @@ void LR1Parser::print_stacks(const std::stack<int>& stateStack,
 		std::cout << it->to_string() << " ";
 	}
 	std::cout << "\n\n";
+}
+
+void LR1Parser::save_tables(const std::string& file_path)
+{
+	std::ofstream fout(file_path);
+	if (!fout.is_open()) {
+		std::cerr << "文件打开失败！" << std::endl;
+		exit(-1);
+	}
+
+	// 序列化 actionTable
+	for (auto& item : actionTable) {
+		int t1 = item.first.first;
+		Symbol t2 = item.first.second;
+		Action t3 = item.second;
+		fout << t1 << " " << t2 << " " << t3 << "\n";
+	}
+
+	// 可能需要一个分隔符来区分两个表
+	fout << "---\n";
+
+	// 序列化 gotoTable
+	for (auto& item : gotoTable) {
+		int t1 = item.first.first;
+		Symbol t2 = item.first.second;
+		int t3 = item.second;
+		fout << t1 << " " << t2 << " " << t3 << "\n";
+	}
+
+	fout.close();
+}
+
+void LR1Parser::load_tables(const std::string& file_path)
+{
+	std::ifstream fin(file_path);
+	if (!fin.is_open()) {
+		std::cerr << "文件打开失败！" << std::endl;
+		exit(-1);
+	}
+
+	std::string line;
+	bool readingActionTable = true;  // 初始假设从actionTable开始读取
+
+	while (std::getline(fin, line)) {
+		if (line == "---") {
+			// 遇到分隔符，切换到读取 gotoTable
+			readingActionTable = false;
+			continue;
+		}
+		std::istringstream iss(line);
+		int state;
+		Symbol symbol;
+		iss >> state >> symbol;
+
+		if (readingActionTable) {
+			Action action;
+			iss >> action;
+			actionTable[{state, symbol}] = action;
+		} else {
+			int gotoState;
+			iss >> gotoState;
+			gotoTable[{state, symbol}] = gotoState;
+		}
+	}
+
+	fin.close();
 }
 
 
