@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug My Project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/output/LR1Parser.exe",
+            "args": [
+                "${workspaceFolder}/test/input/input.txt",
+                "${workspaceFolder}/test/grammer/grammer.txt"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            // "preLaunchTask": "build my project",
+            "miDebuggerPath": "gdb" // 确保这个路径指向您系统中的 GDB
+        }
+    ]
+}

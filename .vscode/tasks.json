@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build my project",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++17",
+                "-O2",
+                "${workspaceFolder}\\src\\main.cpp",
+                "${workspaceFolder}\\src\\Lexer.cpp",
+                "${workspaceFolder}\\src\\LR1Parser.cpp",
+                "-o",
+                "${workspaceFolder}\\output\\LR1Parser.exe"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [
+                        "/d",
+                        "/c"
+                    ]
+                }
+            }
+        }
+    ]
+}
