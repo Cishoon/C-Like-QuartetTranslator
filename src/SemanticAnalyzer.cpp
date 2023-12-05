@@ -232,7 +232,8 @@ void SemanticAnalyzer::handle_prefix_expression(SemanticTreeNode*& node)
 	const std::string& varible_name = list[1]->real_value;
 
 	if (list[0]->literal == "inc_dec_operator") {
-		node->add_quater(op, varible_name, "", varible_name);
+		std::string op_ = op == "++" ? "+" : "-";
+		node->add_quater(op_, varible_name, "1", varible_name);
 		node->real_value = varible_name;
 	} else {
 		std::string new_temp = new_temp_varible();
@@ -256,7 +257,8 @@ void SemanticAnalyzer::handle_postfix_expression(SemanticTreeNode*& node)
 
 	std::string new_temp = new_temp_varible();
 	node->add_quater("=", varible_name, "", new_temp);
-	node->add_quater(op, varible_name, "", varible_name);
+	std::string op_ = op == "++" ? "+" : "-";
+	node->add_quater(op_, varible_name, "1", varible_name);
 
 	node->real_value = new_temp;
 }
