@@ -11,6 +11,7 @@
                 "${workspaceFolder}\\src\\main.cpp",
                 "${workspaceFolder}\\src\\Lexer.cpp",
                 "${workspaceFolder}\\src\\LR1Parser.cpp",
+                "${workspaceFolder}\\src\\SemanticAnalyzer.cpp",
                 "-o",
                 "${workspaceFolder}\\output\\LR1Parser.exe"
             ],

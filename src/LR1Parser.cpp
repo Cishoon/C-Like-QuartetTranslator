@@ -20,7 +20,7 @@ LR1Parser::LR1Parser(const std::string file_path)
 
 	std::string first_line;
 	if (!std::getline(file, first_line)) {
-		std::cerr << "文件格式错误: 第首行必须定义起始符合终止符\n";
+		std::cerr << "文件格式错误: 第首行必须定义起始符合终止符" << std::endl;
 	}
 	std::istringstream is(first_line);
 	std::string temp;
@@ -31,7 +31,7 @@ LR1Parser::LR1Parser(const std::string file_path)
 
 	std::string terminalsLine;
 	if (!std::getline(file, terminalsLine)) {
-		std::cerr << "文件格式错误: 第二行必须定义终结符\n";
+		std::cerr << "文件格式错误: 第二行必须定义终结符" << std::endl;
 	}
 	std::istringstream iss(terminalsLine);
 	std::string terminal;
@@ -239,30 +239,30 @@ void LR1Parser::print_firstSet() const
 		for (const auto& sym : firstSetSymbols) {
 			std::cout << sym.literal << " ";
 		}
-		std::cout << "}\n";
+		std::cout << "}" << std::endl;
 	}
 }
 
 void LR1Parser::print_tables() const
 {
 	// 打印ACTION表
-	std::cout << "ACTION Table:\n";
+	std::cout << "ACTION Table:" << std::endl;
 	for (const auto& entry : actionTable) {
 		const auto& state_symbol_pair = entry.first;
 		const auto& action = entry.second;
 
 		std::cout << "State " << state_symbol_pair.first << ", Symbol " << state_symbol_pair.second.to_string()
-		          << ": " << action.to_string() << "\n";
+		          << ": " << action.to_string() << "" << std::endl;
 	}
 
 	// 打印GOTO表
-	std::cout << "\nGOTO Table:\n";
+	std::cout << "\nGOTO Table:" << std::endl;
 	for (const auto& entry : gotoTable) {
 		const auto& state_symbol_pair = entry.first;
 		const auto& nextState = entry.second;
 
 		std::cout << "State " << state_symbol_pair.first << ", Symbol " << state_symbol_pair.second.to_string()
-		          << ": " << nextState << "\n";
+		          << ": " << nextState << "" << std::endl;
 	}
 }
 
@@ -338,13 +338,13 @@ void LR1Parser::construct_tables()
 	}
 }
 
-bool LR1Parser::parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root) const
+bool LR1Parser::parse(const std::vector<Symbol>& sentence, SemanticTreeNode*& root) const
 {
 	std::stack<int> stateStack;                                          // 状态栈
 	std::stack<Symbol> symbolStack;                                      // 符号栈
 	std::vector<Symbol> inputStack(sentence.rbegin(), sentence.rend());  // 输入栈
 
-	std::vector<ParserTreeNode*> nodeStack;  // 解析树结点栈
+	std::vector<SemanticTreeNode*> nodeStack;  // 解析树结点栈
 
 	// 初始状态
 	stateStack.push(0);
@@ -355,7 +355,7 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root
 		Symbol currentSymbol = inputStack.back();
 
 		// 打印当前栈的状态
-		print_stacks(stateStack, symbolStack, inputStack);
+		// print_stacks(stateStack, symbolStack, inputStack);
 
 		auto actionIt = actionTable.find({currentState, currentSymbol});
 		if (actionIt != actionTable.end()) {
@@ -368,13 +368,13 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root
 					inputStack.pop_back();
 
 					// 创建一个新的叶子节点并压入节点栈
-					ParserTreeNode* newNode = new ParserTreeNode(currentSymbol);
+					SemanticTreeNode* newNode = new SemanticTreeNode(currentSymbol);
 					nodeStack.push_back(newNode);
 					break;
 				}
 				case Action::Type::REDUCE: {
 					// 创建一个新的非叶子节点
-					ParserTreeNode* newNode = new ParserTreeNode(action.production.lhs);
+					SemanticTreeNode* newNode = new SemanticTreeNode(action.production.lhs);
 
 					// 根据产生式右侧的长度，从栈中弹出相应数量的符号和状态
 					for (size_t i = 0; i < action.production.rhs.size(); ++i) {
@@ -396,20 +396,20 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root
 					break;
 				}
 				case Action::Type::ACCEPT:
-					std::cout << "Accept\n";
+					std::cout << "Accept" << std::endl;
 					root = nodeStack.back();  // 设置解析树的根
 					return true;
 				default:
-					std::cerr << "Parse error\n";
+					std::cerr << "Parse error" << std::endl;
 					return false;
 			}
 		} else {
-			std::cerr << "Parse error: no action\n";
+			std::cerr << "Parse error: no action" << std::endl;
 			return false;
 		}
 	}
 
-	std::cerr << "Parse error: input not consumed\n";
+	std::cerr << "Parse error: input not consumed" << std::endl;
 	return false;
 }
 
@@ -451,7 +451,7 @@ void LR1Parser::print_stacks(const std::stack<int>& stateStack,
 	for (auto it = inputStack.rbegin(); it != inputStack.rend(); ++it) {
 		std::cout << it->to_string() << " ";
 	}
-	std::cout << "\n\n";
+	std::cout << "\n" << std::endl;
 }
 
 void LR1Parser::save_tables(const std::string& file_path)
@@ -467,18 +467,18 @@ void LR1Parser::save_tables(const std::string& file_path)
 		int t1 = item.first.first;
 		Symbol t2 = item.first.second;
 		Action t3 = item.second;
-		fout << t1 << " " << t2 << " " << t3 << "\n";
+		fout << t1 << " " << t2 << " " << t3 << "" << std::endl;
 	}
 
 	// 可能需要一个分隔符来区分两个表
-	fout << "---\n";
+	fout << "---" << std::endl;
 
 	// 序列化 gotoTable
 	for (auto& item : gotoTable) {
 		int t1 = item.first.first;
 		Symbol t2 = item.first.second;
 		int t3 = item.second;
-		fout << t1 << " " << t2 << " " << t3 << "\n";
+		fout << t1 << " " << t2 << " " << t3 << "" << std::endl;
 	}
 
 	fout.close();
@@ -518,6 +518,33 @@ void LR1Parser::load_tables(const std::string& file_path)
 	}
 
 	fin.close();
+}
+
+size_t SemanticTreeNode::add_quater(const Quater& quater)
+{
+	size_t this_id = next_quater_id++;
+	quater_list.push_back({this_id, quater});
+	return this_id;
+}
+size_t SemanticTreeNode::add_quater(const size_t& id, const Quater& quater)
+{
+	quater_list.push_back({id, quater});
+	return id;
+}
+size_t SemanticTreeNode::add_quater(const std::string& op, const std::string& arg1, const std::string& arg2, const std::string& result)
+{
+	Quater quater = Quater(op, arg1, arg2, result);
+	size_t this_id = next_quater_id++;
+	quater_list.push_back({this_id, quater});
+	return this_id;
+}
+void SemanticTreeNode::append_quaters(const std::vector<std::pair<size_t, Quater>>& quaters)
+{
+	size_t base_id = next_quater_id;
+	for (const auto& [id, quater] : quaters) {
+		this->add_quater(id + base_id, quater);
+	}
+	next_quater_id += quaters.size();
 }
 
 

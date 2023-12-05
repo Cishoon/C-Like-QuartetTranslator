@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <iostream>
+#include "Quater.hpp"
 
 
 enum class SymbolType {
@@ -19,32 +20,27 @@ enum class SymbolType {
 	Epsilon       // 空串
 };
 
-
-
-struct Symbol
-{
+class Symbol {
+public:
 	SymbolType type;         // 终结符/非终结符/空串
 	std::string literal;     // 这个符号的字面量，比如一个非终结符名为 S,A,B e.g.一个终结符名为T_INT,T_xxxx
 	std::string real_value;  // 这个符号的真实值，比如一个变量名a，一个int数值3
 
-	Symbol()
-	{
-		type = SymbolType::Epsilon;
-		literal = "";
-		real_value = "";
-	}
-	Symbol(const SymbolType& type, const std::string& literal) : type(type), literal(literal), real_value("") {}
+	Symbol(const SymbolType& type = SymbolType::Epsilon,
+	       const std::string& literal = "",
+	       const std::string& real_value = "")
+	    : type(type), literal(literal), real_value(real_value) {}
+
 
 	std::string to_string() const
 	{
 		return literal;  // 或者任何合适的表示方式
 	}
 
-
-
 	friend bool operator==(const Symbol& lhs, const Symbol& rhs)
 	{
-		return lhs.type == rhs.type && lhs.literal == rhs.literal && lhs.real_value == rhs.real_value;
+		return lhs.type == rhs.type && lhs.literal == rhs.literal;
+		// && lhs.real_value == rhs.real_value;
 	}
 
 	friend bool operator<(const Symbol& lhs, const Symbol& rhs)
@@ -52,10 +48,10 @@ struct Symbol
 		if (lhs.type != rhs.type) {
 			return lhs.type < rhs.type;
 		}
-		if (lhs.literal != rhs.literal) {
-			return lhs.literal < rhs.literal;
-		}
-		return lhs.real_value < rhs.real_value;
+		// if (lhs.literal != rhs.literal) {
+		return lhs.literal < rhs.literal;
+		// }
+		// return lhs.real_value < rhs.real_value;
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, Symbol& symbol)
@@ -259,10 +255,10 @@ struct SymbolHash
 	size_t operator()(const Symbol& sym) const
 	{
 		size_t h1 = std::hash<std::string>()(sym.literal);
-		size_t h2 = std::hash<std::string>()(sym.real_value);
+		// size_t h2 = std::hash<std::string>()(sym.real_value);
 		size_t h3 = std::hash<int>()(static_cast<int>(sym.type));
 
-		return ((h1 ^ (h2)) >> 1) ^ (h3 << 1);  // Combine and mix the hashes
+		return h1 ^ h3;  // Combine and mix the hashes
 	}
 };
 
@@ -271,8 +267,8 @@ struct SymbolEqual
 	bool operator()(const Symbol& lhs, const Symbol& rhs) const
 	{
 		return lhs.type == rhs.type &&
-		       lhs.literal == rhs.literal &&
-		       lhs.real_value == rhs.real_value;
+		       lhs.literal == rhs.literal;
+		//    && lhs.real_value == rhs.real_value;
 	}
 };
 
@@ -322,18 +318,26 @@ struct LR1ItemEqual
 	}
 };
 
-class ParserTreeNode : public Symbol {
+class SemanticTreeNode : public Symbol {
 public:
-	ParserTreeNode(const Symbol& sym) : Symbol(sym)
-	{
-		children = std::vector<ParserTreeNode*>();
-	}
-	std::vector<ParserTreeNode*> children;
-
+	SemanticTreeNode(const Symbol& sym) : Symbol(sym), next_quater_id(0) {}
 	bool leaf() { return children.empty(); }
+
+	// 返回添加四元式的ID
+	size_t add_quater(const Quater& quater);
+	size_t add_quater(const size_t& base_id, const Quater& quater);
+	size_t add_quater(const std::string& op, const std::string& arg1, const std::string& arg2, const std::string& result);
+
+	// 追加一个quaters进来
+	void append_quaters(const std::vector<std::pair<size_t, Quater>>& quaters);
+
+public:
+	std::vector<SemanticTreeNode*> children;
+	std::vector<std::pair<size_t, Quater>> quater_list;
+
+private:
+	size_t next_quater_id;
 };
-
-
 
 class LR1Parser {
 public:
@@ -343,7 +347,7 @@ public:
 
 	void print_firstSet() const;
 	void print_tables() const;
-	bool parse(const std::vector<Symbol>& sentence, ParserTreeNode*& root) const;
+	bool parse(const std::vector<Symbol>& sentence, SemanticTreeNode*& root) const;
 	void save_tables(const std::string& file_path);
 	void load_tables(const std::string& file_path);
 
@@ -399,3 +403,5 @@ private:
 
 	std::unordered_set<std::string> terminals;  // 终结符集
 };
+
+

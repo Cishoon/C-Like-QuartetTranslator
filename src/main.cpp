@@ -1,5 +1,6 @@
 #include "Lexer.hpp"
 #include "LR1Parser.hpp"
+#include "SemanticAnalyzer.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -46,8 +47,8 @@ int main(int argc, char* argv[])
 	Token token;
 	do {
 		token = lexer.getNextToken();
-		// std::cout << token.type_to_string() << std::endl;
-		sentence.push_back(Symbol(SymbolType::Terminal, token.type_to_string()));
+		// std::cout << token.type_to_string() << " " << token.value << std::endl;
+		sentence.push_back(Symbol(SymbolType::Terminal, token.type_to_string(), token.value));
 	} while (token.type != T_EOF);
 
 	// LR1Parser parser(grammarFile);
@@ -55,9 +56,12 @@ int main(int argc, char* argv[])
 	LR1Parser parser;
 	parser.load_tables("./test/grammer/table.cache");
 
-	ParserTreeNode* root = nullptr;
+	SemanticTreeNode* root = nullptr;
 	parser.parse(sentence, root);
 
+	SemanticAnalyzer analyzer(root);
+	analyzer.semantic_analyze();
+	analyzer.print_intermediate_code();
 
 	return 0;
 }
