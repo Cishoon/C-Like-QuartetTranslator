@@ -7,6 +7,51 @@ void SemanticAnalyzer::print_intermediate_code()
 	}
 }
 
+void SemanticAnalyzer::print_variable_table()
+{
+	// 检查变量表是否为空
+	if (varible_table.empty()) {
+		std::cout << "Variable table is empty." << std::endl;
+		return;
+	}
+
+	// 确定每列的最大宽度
+	size_t maxNameLength = std::string("Variable Name").length();
+	size_t maxTypeLength = std::string("Type").length();
+	size_t maxValueLength = std::string("Initial Value").length();
+
+	for (const auto& pair : varible_table) {
+		maxNameLength = std::max(maxNameLength, pair.first.length());
+		maxTypeLength = std::max(maxTypeLength, pair.second.type.length());
+		maxValueLength = std::max(maxValueLength, pair.second.value.length());
+	}
+
+	// 增加一些额外的空间以美化输出
+	maxNameLength += 2;
+	maxTypeLength += 2;
+	maxValueLength += 2;
+
+	// 计算总长度和打印表头
+	size_t totalLength = maxNameLength + maxTypeLength + maxValueLength + 7;  // 7 是分隔符和边界的长度
+	std::string topBottomBorder = "+" + std::string(maxNameLength, '-') + "+" + std::string(maxTypeLength, '-') + "+" + std::string(maxValueLength, '-') + "+";
+	std::cout << topBottomBorder << std::endl;
+	std::cout << std::left << "|" << std::setw(maxNameLength) << " Variable Name "
+	          << "|" << std::setw(maxTypeLength) << " Type "
+	          << "|" << std::setw(maxValueLength) << " Initial Value "
+	          << "|" << std::endl;
+	std::cout << topBottomBorder << std::endl;
+
+	// 遍历varible_table并打印
+	for (const auto& pair : varible_table) {
+		std::cout << std::left << "|" << std::setw(maxNameLength) << (" " + pair.first)
+		          << "|" << std::setw(maxTypeLength) << (" " + pair.second.type)
+		          << "|" << std::setw(maxValueLength) << (" " + pair.second.value) << "|" << std::endl;
+	}
+
+	// 打印底部横线
+	std::cout << topBottomBorder << std::endl;
+}
+
 void SemanticAnalyzer::semantic_analyze()
 {
 	if (root == nullptr) return;
@@ -367,7 +412,7 @@ void SemanticAnalyzer::handle_iteration_stmt(SemanticTreeNode*& node)
 void SemanticAnalyzer::handle_opt_expression_stmt(SemanticTreeNode*& node)
 {
 	/*
-	expression_stmt 
+	expression_stmt
 	T_SEMICOLON
 	*/
 	node->real_value = node->real_value.substr(0, node->real_value.size() - 1);  // 去掉分号;

@@ -1,5 +1,6 @@
 #pragma once
 #include "LR1Parser.hpp"
+#include <iomanip>
 
 struct VaribleMeta
 {
@@ -14,6 +15,7 @@ public:
 
 	void semantic_analyze();
 	void print_intermediate_code();
+	void print_variable_table();
 
 private:
 	void handle_defalt(SemanticTreeNode*& node);

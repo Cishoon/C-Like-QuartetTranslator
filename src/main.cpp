@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
 	SemanticAnalyzer analyzer(root);
 	analyzer.semantic_analyze();
 	analyzer.print_intermediate_code();
+	analyzer.print_variable_table();
 
 	return 0;
 }
