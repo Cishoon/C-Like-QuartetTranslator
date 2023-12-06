@@ -20,4 +20,6 @@ public:
 		std::string formatted_arg2 = arg2.empty() ? "_" : arg2;
 		return "(" + op + ", " + formatted_arg1 + ", " + formatted_arg2 + ", " + result + ")";
 	}
+
+	bool is_jump() const { return op[0] == 'j'; }
 };

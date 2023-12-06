@@ -54,6 +54,12 @@ void SemanticAnalyzer::semantic_analyze()
 			handle_factor(node);
 		} else if (node->literal == "prefix_expression") {
 			handle_prefix_expression(node);
+		} else if (node->literal == "selection_stmt") {
+			handle_selection_stmt(node);
+		} else if (node->literal == "iteration_stmt") {
+			handle_iteration_stmt(node);
+		} else if (node->literal == "opt_expression_stmt") {
+			handle_opt_expression_stmt(node);
 		}
 
 		if (node->children.size() == 1 && node->children[0]->literal == "T_IDENTIFIER") {
@@ -66,7 +72,9 @@ void SemanticAnalyzer::handle_defalt(SemanticTreeNode*& node)
 {
 	for (const auto& child : node->children) {
 		node->real_value += child->real_value;
-		node->append_quaters(child->quater_list);
+		if (node->literal != "selection_stmt" && node->literal != "iteration_stmt") {
+			node->append_quaters(child->quater_list);
+		}
 	}
 }
 
@@ -133,6 +141,7 @@ void SemanticAnalyzer::handle_simple_expression(SemanticTreeNode*& node)
 {
 	/*
 	additive_expression relop additive_expression
+	simple_expression relop simple_expression
 	additive_expression
 	*/
 	const auto& list = node->children;
@@ -271,5 +280,97 @@ void SemanticAnalyzer::handle_var(SemanticTreeNode*& node)
 	*/
 
 	// 暂时不考虑数组
+	return;
+}
+
+void SemanticAnalyzer::handle_selection_stmt(SemanticTreeNode*& node)
+{
+	/*
+	T_IF T_LEFT_PAREN expression T_RIGHT_PAREN statement
+	T_IF T_LEFT_PAREN expression T_RIGHT_PAREN statement T_ELSE statement
+	*/
+
+	const auto& list = node->children;
+
+	const auto& stmt_THEN = list[4];
+	const auto& cond = list[2]->real_value;
+	node->append_quaters(list[2]->quater_list);
+
+	size_t THEN = -1;
+	size_t ELSE = -1;
+	size_t ENDIF = -1;
+
+
+	if (list.size() == 5) {
+		THEN = 2 + list[2]->quater_list.size();
+		ENDIF = THEN + stmt_THEN->quater_list.size();
+
+		node->add_quater("jnz", cond, "", THEN);
+		node->add_quater("j", "", "", ENDIF);
+		node->append_quaters(stmt_THEN->quater_list);
+	} else if (list.size() == 7) {
+		const auto& stmt_ELSE = list[6];
+		ELSE = 1 + list[2]->quater_list.size();
+		THEN = ELSE + stmt_ELSE->children.size() + 1;
+		ENDIF = THEN + stmt_THEN->children.size();
+
+		node->add_quater("jnz", cond, "", THEN);
+		node->append_quaters(stmt_ELSE->quater_list);
+		node->add_quater("j", "", "", ENDIF);
+		node->append_quaters(stmt_THEN->quater_list);
+	}
+}
+
+void SemanticAnalyzer::handle_iteration_stmt(SemanticTreeNode*& node)
+{
+	const auto& list = node->children;
+
+
+	if (list[0]->literal == "T_WHILE") {
+		/*
+		T_WHILE T_LEFT_PAREN expression T_RIGHT_PAREN statement
+		*/
+		const auto& cond = list[2]->real_value;
+		const auto& stmt = list[4];
+		size_t LOOP = 0;
+		size_t BODY = LOOP + list[2]->quater_list.size() + 2;
+		size_t END_LOOP = BODY + stmt->quater_list.size() + 1;
+
+		node->append_quaters(list[2]->quater_list);
+		node->add_quater("jnz", cond, "", BODY);
+		node->add_quater("j", "", "", END_LOOP);
+		node->append_quaters(stmt->quater_list);
+		node->add_quater("j", "", "", LOOP);
+	} else if (list[0]->literal == "T_FOR") {
+		/*
+		T_FOR T_LEFT_PAREN opt_expression_stmt opt_expression_stmt expression T_RIGHT_PAREN statement
+		*/
+		const auto& exp1 = list[2];
+		const auto& exp2 = list[3];
+		const auto& exp3 = list[4];
+		const auto& stmt = list[6];
+
+		size_t START = exp1->quater_list.size();
+		size_t BODY = START + exp2->quater_list.size() + 2;
+		size_t END_LOOP = BODY + stmt->quater_list.size() + exp3->quater_list.size() + 1;
+
+		node->append_quaters(exp1->quater_list);
+		node->append_quaters(exp2->quater_list);
+		node->add_quater("jnz", exp2->real_value, "", BODY);
+		node->add_quater("j", "", "", END_LOOP);
+		node->append_quaters(stmt->quater_list);
+		node->append_quaters(exp3->quater_list);
+		node->add_quater("j", "", "", START);
+	}
+}
+
+void SemanticAnalyzer::handle_opt_expression_stmt(SemanticTreeNode*& node)
+{
+	/*
+	expression_stmt 
+	T_SEMICOLON
+	*/
+	node->real_value = node->real_value.substr(0, node->real_value.size() - 1);  // 去掉分号;
+
 	return;
 }

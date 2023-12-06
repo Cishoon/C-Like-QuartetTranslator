@@ -27,9 +27,13 @@ private:
 	void handle_var(SemanticTreeNode*& node);
 	void handle_factor(SemanticTreeNode*& node);
 	void handle_prefix_expression(SemanticTreeNode*& node);
+	void handle_selection_stmt(SemanticTreeNode*& node);
+	void handle_iteration_stmt(SemanticTreeNode*& node);
+	void handle_opt_expression_stmt(SemanticTreeNode*& node);
 
 private:
-	std::string new_temp_varible()
+	std::string
+	new_temp_varible()
 	{
 		return "t" + std::to_string(next_temp_varible_id++);
 	}

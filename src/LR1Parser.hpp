@@ -327,6 +327,7 @@ public:
 	size_t add_quater(const Quater& quater);
 	size_t add_quater(const size_t& base_id, const Quater& quater);
 	size_t add_quater(const std::string& op, const std::string& arg1, const std::string& arg2, const std::string& result);
+	size_t add_quater(const std::string& op, const std::string& arg1, const std::string& arg2, const size_t& result);
 
 	// 追加一个quaters进来
 	void append_quaters(const std::vector<std::pair<size_t, Quater>>& quaters);
@@ -403,5 +404,3 @@ private:
 
 	std::unordered_set<std::string> terminals;  // 终结符集
 };
-
-

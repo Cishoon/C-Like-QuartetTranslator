@@ -355,7 +355,7 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence, SemanticTreeNode*& ro
 		Symbol currentSymbol = inputStack.back();
 
 		// 打印当前栈的状态
-		// print_stacks(stateStack, symbolStack, inputStack);
+		print_stacks(stateStack, symbolStack, inputStack);
 
 		auto actionIt = actionTable.find({currentState, currentSymbol});
 		if (actionIt != actionTable.end()) {
@@ -451,7 +451,8 @@ void LR1Parser::print_stacks(const std::stack<int>& stateStack,
 	for (auto it = inputStack.rbegin(); it != inputStack.rend(); ++it) {
 		std::cout << it->to_string() << " ";
 	}
-	std::cout << "\n" << std::endl;
+	std::cout << "\n"
+	          << std::endl;
 }
 
 void LR1Parser::save_tables(const std::string& file_path)
@@ -538,10 +539,25 @@ size_t SemanticTreeNode::add_quater(const std::string& op, const std::string& ar
 	quater_list.push_back({this_id, quater});
 	return this_id;
 }
+size_t SemanticTreeNode::add_quater(const std::string& op, const std::string& arg1, const std::string& arg2, const size_t& result)
+{
+	Quater quater = Quater(op, arg1, arg2, std::to_string(result));
+	size_t this_id = next_quater_id++;
+	quater_list.push_back({this_id, quater});
+	return this_id;
+}
 void SemanticTreeNode::append_quaters(const std::vector<std::pair<size_t, Quater>>& quaters)
 {
 	size_t base_id = next_quater_id;
 	for (const auto& [id, quater] : quaters) {
+		if (quater.is_jump()) {
+			// 跳转语句不仅id要+base_id, 而且result也要加
+			Quater q(quater);
+			q.result = std::to_string(std::stoi(q.result) + base_id);
+			this->add_quater(id + base_id, q);
+			continue;
+		}
+
 		this->add_quater(id + base_id, quater);
 	}
 	next_quater_id += quaters.size();

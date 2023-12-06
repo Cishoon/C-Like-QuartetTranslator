@@ -1,12 +1,7 @@
-int a;
-int b = 3;
-a = 1;
-b = a + 2;
-int c = a > b;
-
-int d;
-d = c + a * b + 123;
-c = d++;
-
-int e;
-e = ++d;
+int i;
+int sum;
+for(i = 0; i < 50; ++i) {
+    if ((i % 2) == 0) {
+        sum = sum + i;
+    }
+}
