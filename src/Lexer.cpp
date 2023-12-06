@@ -52,20 +52,20 @@ Token Lexer::getOperator()
 Token Lexer::getStringLiteral()
 {
 	std::string value;
-	getChar();  // Consume the opening quote
+	value += getChar();  // Consume the opening quote
 	while (peek() != '"' && peek() != '\0') {
 		value += getChar();
 	}
-	getChar();  // Consume the closing quote
+	value += getChar();  // Consume the closing quote
 	return {T_STRING_LITERAL, value};
 }
 
 Token Lexer::getCharLiteral()
 {
 	std::string value;
-	getChar();           // Consume the opening quote
+	value += getChar();  // Consume the opening quote
 	value += getChar();  // Consume the character
-	getChar();           // Consume the closing quote
+	value += getChar();  // Consume the closing quote
 	return {T_CHAR_LITERAL, value};
 }
 
@@ -112,32 +112,32 @@ Token Lexer::getDelimiter()
 	return {T_UNKNOWN, value};
 }
 
-void Lexer::skipComment() {
-    if (peek() == '/') {
-        if (input[index + 1] == '/') {// 单行注释
-            while (peek() != '\n' && peek() != '\0') {
-                getChar();
-            }
-            if (peek() == '\n') {
-                getChar(); // 消耗换行符
-            }
-        } 
-		else if (input[index + 1] == '*') {
-            // 多行注释
-            getChar(); // 消耗/
-            getChar(); // 消耗*
-            while (!(peek() == '*' && input[index + 1] == '/')) {
-                if (peek() == '\0') {
-                    // 提示错误：多行注释没有正确关闭
-                    std::cout << "Error: Unclosed multi-line comment";
-                    return;
-                }
-                getChar();
-            }
-            getChar(); // 消耗*
-            getChar(); // 消耗/
-        }
-    }
+void Lexer::skipComment()
+{
+	if (peek() == '/') {
+		if (input[index + 1] == '/') {  // 单行注释
+			while (peek() != '\n' && peek() != '\0') {
+				getChar();
+			}
+			if (peek() == '\n') {
+				getChar();  // 消耗换行符
+			}
+		} else if (input[index + 1] == '*') {
+			// 多行注释
+			getChar();  // 消耗/
+			getChar();  // 消耗*
+			while (!(peek() == '*' && input[index + 1] == '/')) {
+				if (peek() == '\0') {
+					// 提示错误：多行注释没有正确关闭
+					std::cout << "Error: Unclosed multi-line comment";
+					return;
+				}
+				getChar();
+			}
+			getChar();  // 消耗*
+			getChar();  // 消耗/
+		}
+	}
 }
 
 Lexer::Lexer(const std::string& input) : input(input) {}
