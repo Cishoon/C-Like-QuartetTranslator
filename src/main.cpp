@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
 		sentence.push_back(Symbol(SymbolType::Terminal, token.type_to_string(), token.value));
 	} while (token.type != T_EOF);
 
-	LR1Parser parser1(grammarFile);
-	parser1.save_tables("./test/grammer/table.cache");
+	// LR1Parser parser1(grammarFile);
+	// parser1.save_tables("./test/grammer/table.cache");
 	LR1Parser parser;
 	parser.load_tables("./test/grammer/table.cache");
 
