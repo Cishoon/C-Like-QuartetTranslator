@@ -2,10 +2,76 @@
 
 void SemanticAnalyzer::print_intermediate_code()
 {
-	for (const auto& [id, item] : intermediate_code()) {
-		std::cout << id << "\t" << item.to_string() << "\n";
+	// 首先检查中间代码是否为空
+	if (intermediate_code().empty()) {
+		std::cout << "Intermediate code table is empty." << std::endl;
+		return;
 	}
+
+	// 确定ID列的最大宽度
+	size_t maxIdLength = std::string("ID").length();
+	for (const auto& [id, _] : intermediate_code()) {
+		maxIdLength = std::max(maxIdLength, std::to_string(id).length());
+	}
+	maxIdLength += 2;  // 增加一些额外的空间以美化输出
+
+	// 四元式每部分的最大宽度
+	size_t maxPart1Length = 0, maxPart2Length = 0, maxPart3Length = 0, maxPart4Length = 0;
+	for (const auto& [_, item] : intermediate_code()) {
+		std::istringstream iss(item.to_string());
+		std::string part;
+		std::getline(iss, part, ',');  // 第一部分
+		maxPart1Length = std::max(maxPart1Length, part.length());
+		std::getline(iss, part, ',');  // 第二部分
+		maxPart2Length = std::max(maxPart2Length, part.length());
+		std::getline(iss, part, ',');  // 第三部分
+		maxPart3Length = std::max(maxPart3Length, part.length());
+		std::getline(iss, part, ')');  // 第四部分
+		maxPart4Length = std::max(maxPart4Length, part.length());
+	}
+
+	maxPart1Length += 1;
+	maxPart2Length += 1;
+	maxPart3Length += 1;
+	maxPart4Length += 0;
+	// 计算四元式列的总宽度
+	size_t maxItemLength = maxPart1Length + maxPart2Length + maxPart3Length + maxPart4Length + 6;  // 9 是四个逗号和两个括号的长度
+
+	// 计算总长度和打印表头
+	size_t totalLength = maxIdLength + maxItemLength + 5;  // 5 是分隔符和边界的长度
+	std::string topBottomBorder = "+" + std::string(maxIdLength, '-') + "+" + std::string(maxItemLength, '-') + "+";
+	std::cout << topBottomBorder << std::endl;
+	std::cout << std::left << "|" << std::setw(maxIdLength) << " ID "
+	          << "|" << std::setw(maxItemLength) << " Quarter "
+	          << "|" << std::endl;
+	std::cout << topBottomBorder << std::endl;
+
+	// 遍历中间代码并打印
+	for (const auto& [id, item] : intermediate_code()) {
+		std::istringstream iss(item.to_string());
+		std::string part1, part2, part3, part4;
+		std::getline(iss, part1, ',');
+		std::getline(iss, part2, ',');
+		std::getline(iss, part3, ',');
+		std::getline(iss, part4, ')');
+		std::string item_;
+		std::stringstream ss;
+		ss << " " << std::left << std::setw(maxPart1Length) << part1
+		   << "," << std::setw(maxPart2Length) << part2
+		   << "," << std::setw(maxPart3Length) << part3
+		   << "," << std::setw(maxPart4Length) << part4 << ")";
+		std::getline(ss, item_);
+
+		std::cout << std::left << "|" << std::setw(maxIdLength) << (" " + std::to_string(id))
+		          << "|"
+		          << std::setw(maxItemLength) << item_
+		          << "|" << std::endl;
+	}
+
+	// 打印底部横线
+	std::cout << topBottomBorder << std::endl;
 }
+
 
 void SemanticAnalyzer::print_variable_table()
 {

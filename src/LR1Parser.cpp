@@ -355,7 +355,7 @@ bool LR1Parser::parse(const std::vector<Symbol>& sentence, SemanticTreeNode*& ro
 		Symbol currentSymbol = inputStack.back();
 
 		// 打印当前栈的状态
-		print_stacks(stateStack, symbolStack, inputStack);
+		// print_stacks(stateStack, symbolStack, inputStack);
 
 		auto actionIt = actionTable.find({currentState, currentSymbol});
 		if (actionIt != actionTable.end()) {
